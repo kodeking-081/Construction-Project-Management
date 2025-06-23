@@ -2,6 +2,8 @@
 'use client';
 import { X, Pencil, Trash2 } from 'lucide-react';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 interface TaskDetailModalProps {
   task: any;
   onClose: () => void;

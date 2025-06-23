@@ -1,6 +1,7 @@
+//File: app/(dashboard)/projects/[id]/page.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -42,7 +43,6 @@ export default function ProjectDetailPage() {
   const [role, setRole] = useState('');
   const router = useRouter();
 
-
   useEffect(() => {
     fetch('/api/me')
       .then((res) => res.json())
@@ -50,9 +50,7 @@ export default function ProjectDetailPage() {
       .catch((err) => console.error('Failed to fetch user role:', err));
   }, []);
 
-
-
-  const fetchProject = async () => {
+  const fetchProject = useCallback(async () => {
     try {
       const res = await fetch(`/api/projects/${id}`);
       const data = await res.json();
@@ -62,11 +60,11 @@ export default function ProjectDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     if (id) fetchProject();
-  }, [id]);
+  }, [id, fetchProject]);
 
   const handleAddSubProject = async () => {
     const res = await fetch('/api/subprojects', {
@@ -122,7 +120,7 @@ export default function ProjectDetailPage() {
           <p className="text-xl font-semibold text-green-700 mt-4">Budget: ${project.budget.toLocaleString()}</p>
         </div>
         <div className="rounded-xl overflow-hidden w-full md:w-64 h-40">
-          <img src={project.image} alt="Project" width={300} height={160} className="object-cover h-full w-full" />
+          <Image src={project.image} alt="Project" width={300} height={160} className="object-cover h-full w-full" />
         </div>
       </motion.div>
 
@@ -143,7 +141,7 @@ export default function ProjectDetailPage() {
                 if (role.toUpperCase() === 'ADMIN') {
                   router.push(`/costboard?project=${project.id}&subproject=${sub.id}`);
                 } else {
-                  alert('Create Material requirements and redirect'); // or open a modal, or do nothing
+                  alert('Create Material requirements and redirect');
                 }
               }}
               className="p-4 bg-white rounded-xl shadow-md transition-all cursor-pointer hover:shadow-lg"
@@ -154,7 +152,6 @@ export default function ProjectDetailPage() {
               </p>
             </motion.div>
           ))}
-
         </div>
       </motion.div>
 
@@ -245,8 +242,7 @@ export default function ProjectDetailPage() {
   );
 }
 
-// Modal Component
-function Modal({ onClose, title, children }: { onClose: () => void; title: string; children: React.ReactNode }) {
+function Modal({ title, children }: { onClose: () => void; title: string; children: React.ReactNode }) {
   return (
     <motion.div
       className="fixed inset-0 z-50 bg-black/40 flex justify-center items-center px-4"
@@ -265,7 +261,6 @@ function Modal({ onClose, title, children }: { onClose: () => void; title: strin
   );
 }
 
-// Buttons Component
 function ActionButtons({ onSubmit, onCancel }: { onSubmit: () => void; onCancel: () => void }) {
   return (
     <div className="flex justify-end gap-2 mt-4">

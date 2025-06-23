@@ -19,13 +19,13 @@ export default function Home() {
         } else {
           router.replace('/login');
         }
-      } catch (err) {
+      } catch {
         router.replace('/login');
       }
     };
 
     redirectByRole();
-  }, []);
+  }, [router]); // ✅ Add router as dependency
 
   return (
     <div className="text-center p-10 text-gray-700">

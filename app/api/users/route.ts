@@ -22,7 +22,7 @@ async function authenticateAdmin() {
     }
     return { payload };
   } catch (err) {
-    return { error: 'Invalid token', status: 401 };
+    return { error: 'Invalid token', status: 401, err };
   }
 }
 

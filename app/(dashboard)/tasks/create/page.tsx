@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import debounce from 'lodash.debounce';
 
@@ -19,8 +19,6 @@ export default function CreateTaskPage() {
   const searchParams = useSearchParams();
   const projectId = searchParams.get('project');
   const subprojectId = searchParams.get('subproject');
-
-  const [users, setUsers] = useState<User[]>([]);
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -34,29 +32,23 @@ export default function CreateTaskPage() {
   const [searchUserInput, setSearchUserInput] = useState('');
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
 
-  const debounceFetchUsers = useCallback(
-    debounce((query: string) => {
-      if (query.trim().length <= 1) {
-        setFilteredUsers([]);
-        return;
-      }
+  // 🛠️ Debounced search logic wrapped in useEffect-safe callback
+  const debounceFetchUsers = debounce((query: string) => {
+    if (query.trim().length <= 1) {
+      setFilteredUsers([]);
+      return;
+    }
 
-      fetch(`/api/users?search=${query}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (Array.isArray(data)) setFilteredUsers(data);
-          else setFilteredUsers([]);
-        })
-        .catch(() => setFilteredUsers([]));
-    }, 400),
-    []
-  );
-
-  useEffect(() => {
-    fetch('/api/users')
+    fetch(`/api/users?search=${query}`)
       .then((res) => res.json())
-      .then((data) => setUsers(data.users || []));
-  }, []);
+      .then((data) => {
+        if (Array.isArray(data)) setFilteredUsers(data);
+        else setFilteredUsers([]);
+      })
+      .catch(() => setFilteredUsers([]));
+  }, 400);
+
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -82,7 +74,6 @@ export default function CreateTaskPage() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // ✅ cookies are sent automatically — no need to manually add token
       },
       body: JSON.stringify(payload),
     });
@@ -225,7 +216,6 @@ export default function CreateTaskPage() {
             Create Task
           </button>
         </div>
-
       </form>
     </div>
   );

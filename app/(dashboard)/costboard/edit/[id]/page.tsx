@@ -1,4 +1,6 @@
 // File: app/costboard/edit/[id]/page.tsx
+// File: app/costboard/edit/[id]/page.tsx
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -47,12 +49,10 @@ export default function EditCostEntryPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        // ✅ Check if user is logged in
         const meRes = await fetch('/api/me');
         if (!meRes.ok) throw new Error('Unauthorized');
-        const user = await meRes.json();
+        await meRes.json();
 
-        // ✅ Fetch cost and categories using session (cookie-based auth)
         const [costRes, catRes] = await Promise.all([
           fetch(`/api/costboard/${id}`, { credentials: 'include' }),
           fetch('/api/categories', { credentials: 'include' }),
@@ -79,9 +79,13 @@ export default function EditCostEntryPage() {
 
         setProjectId(cost.projectId);
         setSubprojectId(cost.subprojectId);
-      } catch (err) {
+      } catch (err: unknown) {
         console.error(err);
-        alert('Could not load data. Please login again.');
+        if (err instanceof Error) {
+          alert(err.message);
+        } else {
+          alert('Could not load data. Please login again.');
+        }
         router.push('/login');
       } finally {
         setLoading(false);
@@ -118,7 +122,7 @@ export default function EditCostEntryPage() {
       const res = await fetch(`/api/costboard/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // ✅ Use cookie-based session
+        credentials: 'include',
         body: JSON.stringify(payload),
       });
 
@@ -135,9 +139,13 @@ export default function EditCostEntryPage() {
           router.push('/costboard');
         }
       }, 1500);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      alert(err.message || 'Error occurred');
+      if (err instanceof Error) {
+        alert(err.message);
+      } else {
+        alert('An unexpected error occurred');
+      }
     } finally {
       setSubmitting(false);
     }

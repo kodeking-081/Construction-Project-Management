@@ -1,7 +1,8 @@
 //File: app/(dashboard)/tasks/page.tsx
+//File: app/(dashboard)/tasks/page.tsx
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import debounce from 'lodash.debounce';
 import TaskDetailModal from '@/components/TaskDetailModal';
@@ -45,8 +46,6 @@ export default function TasksPage() {
   const subprojectId = searchParams.get('subproject');
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [filteredSubprojects, setFilteredSubprojects] = useState<Subproject[]>([]);
-  const [searchUserInput, setSearchUserInput] = useState('');
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [filteredAssignedToUsers, setFilteredAssignedToUsers] = useState<User[]>([]);
   const [filteredCreatedByUsers, setFilteredCreatedByUsers] = useState<User[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -70,91 +69,59 @@ export default function TasksPage() {
 
   const tasksPerPage = 3;
 
+  const debounceFetchProjects = debounce((query: string) => {
+    fetch(`/api/projects?search=${query}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.projects)) setFilteredProjects(data.projects);
+        else setFilteredProjects([]);
+      })
+      .catch(() => setFilteredProjects([]));
+  }, 300);
 
-    const debounceFetchProjects = useCallback(
-    debounce((query: string) => {
-      fetch(`/api/projects?search=${query}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (Array.isArray(data.projects)) setFilteredProjects(data.projects);
-          else setFilteredProjects([]);
-        })
-        .catch(() => setFilteredProjects([]));
-    }, 300),
-    []
-  );
+  const debounceFetchSubprojects = debounce((query: string, pid: string) => {
+    fetch(`/api/subprojects?projectId=${pid}&search=${query}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.subprojects)) setFilteredSubprojects(data.subprojects);
+        else setFilteredSubprojects([]);
+      })
+      .catch(() => setFilteredSubprojects([]));
+  }, 300);
 
-  const debounceFetchSubprojects = useCallback(
-    debounce((query: string, pid: string) => {
-      fetch(`/api/subprojects?projectId=${pid}&search=${query}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (Array.isArray(data.subprojects)) setFilteredSubprojects(data.subprojects);
-          else setFilteredSubprojects([]);
-        })
-        .catch(() => setFilteredSubprojects([]));
-    }, 300),
-    []
-  );
+  const debounceFetchAssignedToUsers = debounce((query: string) => {
+    if (query.trim().length <= 1) {
+      setFilteredAssignedToUsers([]);
+      return;
+    }
+    fetch(`/api/users?search=${query}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setFilteredAssignedToUsers(data);
+        else setFilteredAssignedToUsers([]);
+      })
+      .catch(() => setFilteredAssignedToUsers([]));
+  }, 400);
 
-  const debounceFetchUsers = useCallback(
-    debounce((query: string) => {
-      if (query.trim().length <= 1) {
-        setFilteredUsers([]);
-        return;
-      }
-      fetch(`/api/users?search=${query}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (Array.isArray(data)) setFilteredUsers(data);
-          else setFilteredUsers([]);
-        })
-        .catch(() => setFilteredUsers([]));
-    }, 400),
-    []
-  );
-
-  const debounceFetchAssignedToUsers = useCallback(
-    debounce((query: string) => {
-      if (query.trim().length <= 1) {
-        setFilteredAssignedToUsers([]);
-        return;
-      }
-      fetch(`/api/users?search=${query}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (Array.isArray(data)) setFilteredAssignedToUsers(data);
-          else setFilteredAssignedToUsers([]);
-        })
-        .catch(() => setFilteredAssignedToUsers([]));
-    }, 400),
-    []
-  );
-
-  const debounceFetchCreatedByUsers = useCallback(
-    debounce((query: string) => {
-      if (query.trim().length <= 1) {
-        setFilteredCreatedByUsers([]);
-        return;
-      }
-      fetch(`/api/users?search=${query}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (Array.isArray(data)) setFilteredCreatedByUsers(data);
-          else setFilteredCreatedByUsers([]);
-        })
-        .catch(() => setFilteredCreatedByUsers([]));
-    }, 400),
-    []
-  );
+  const debounceFetchCreatedByUsers = debounce((query: string) => {
+    if (query.trim().length <= 1) {
+      setFilteredCreatedByUsers([]);
+      return;
+    }
+    fetch(`/api/users?search=${query}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setFilteredCreatedByUsers(data);
+        else setFilteredCreatedByUsers([]);
+      })
+      .catch(() => setFilteredCreatedByUsers([]));
+  }, 400);
 
   useEffect(() => {
     const pid = searchParams.get('project');
     const spid = searchParams.get('subproject');
-
     const project = projects.find(p => p.id.toString() === pid);
     const subproject = subprojects.find(sp => sp.id === spid);
-
     if (project) setProjectQuery(project.title);
     if (subproject) setSubprojectQuery(subproject.name);
   }, [searchParams, projects, subprojects]);
@@ -171,11 +138,8 @@ export default function TasksPage() {
     setPage(1);
   }, [selectedUser, selectedCreatedBy, selectedPriority, selectedStatus, selectedDate, showCategory]);
 
-  
-
   useEffect(() => {
     if (!projectId || !subprojectId) return;
-
     const query = new URLSearchParams({
       project: projectId,
       subproject: subprojectId,
@@ -184,15 +148,11 @@ export default function TasksPage() {
       ...(selectedPriority && { priority: selectedPriority }),
       ...(selectedStatus && { status: selectedStatus }),
       ...(selectedDate && { date: selectedDate }),
-      ...(showCategory
-        ? { viewCategory: showCategory }
-        : { excludeCompleted: 'true' }),
+      ...(showCategory ? { viewCategory: showCategory } : { excludeCompleted: 'true' }),
       page: page.toString(),
       limit: tasksPerPage.toString(),
     });
-
     setLoading(true);
-
     fetch(`/api/tasks?${query.toString()}`)
       .then((res) => res.json())
       .then((data) => {
@@ -204,17 +164,7 @@ export default function TasksPage() {
         console.error('Error fetching tasks:', err);
         setLoading(false);
       });
-  }, [
-    projectId,
-    subprojectId,
-    selectedUser,
-    selectedCreatedBy,
-    selectedPriority,
-    selectedStatus,
-    selectedDate,
-    showCategory,
-    page
-  ]);
+  }, [projectId, subprojectId, selectedUser, selectedCreatedBy, selectedPriority, selectedStatus, selectedDate, showCategory, page]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -225,7 +175,8 @@ export default function TasksPage() {
       }
     };
     checkAuth();
-  }, []);
+  }, [router]);
+
 
   useEffect(() => {
     fetch('/api/projects', { credentials: 'include' })
@@ -256,16 +207,6 @@ export default function TasksPage() {
     }
   }, [projectId]);
 
-  const handleProjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selected = e.target.value;
-    router.push(`/tasks?project=${selected}`);
-  };
-
-  const handleSubprojectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selected = e.target.value;
-    router.push(`/tasks?project=${projectId}&subproject=${selected}`);
-  };
-
   const handleProjectSelect = (proj: Project) => {
     setProjectQuery(proj.title);
     router.push(`/tasks?project=${proj.id}`);
@@ -291,15 +232,6 @@ export default function TasksPage() {
       MEDIUM: 'bg-yellow-100 text-yellow-600',
       LOW: 'bg-green-100 text-green-600',
     }[priority]
-  );
-
-  const getStatusBadge = (status: TaskStatus) => (
-    {
-      PENDING: 'bg-gray-100 text-gray-700',
-      IN_PROGRESS: 'bg-blue-100 text-blue-700',
-      DONE: 'bg-green-100 text-green-700',
-      ON_HOLD: 'bg-yellow-100 text-yellow-800',
-    }[status]
   );
 
   const handleStatusChange = async (taskId: string, status: TaskStatus) => {
@@ -501,6 +433,23 @@ export default function TasksPage() {
                       className="w-full px-3 py-1 border rounded text-sm"
                     />
                   </div>
+
+                  {/* Status */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700">Status</label>
+                    <select
+                      value={selectedStatus}
+                      onChange={(e) => setSelectedStatus(e.target.value)}
+                      className="w-full px-3 py-1 border rounded text-sm"
+                    >
+                      <option value="">All</option>
+                      <option value="PENDING">Pending</option>
+                      <option value="IN_PROGRESS">In Progress</option>
+                      <option value="DONE">Done</option>
+                      <option value="ON_HOLD">On Hold</option>
+                    </select>
+                  </div>
+
                 </div>
               </div>
             )}

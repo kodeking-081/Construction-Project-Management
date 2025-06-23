@@ -1,7 +1,7 @@
 //File: app/(dashboard)/tasks/edit/[id]/page.tsx
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import debounce from 'lodash.debounce';
 
@@ -19,6 +19,22 @@ interface User {
   id: number;
   name: string;
 }
+
+// ✅ Debounced user search (no localStorage, no useCallback)
+const debouncedSearchUsers = debounce(
+  (query: string, callback: (users: User[]) => void) => {
+    if (query.trim().length < 2) {
+      callback([]);
+      return;
+    }
+
+    fetch(`/api/users?search=${query}`)
+      .then((res) => res.json())
+      .then((data) => callback(Array.isArray(data) ? data : []))
+      .catch(() => callback([]));
+  },
+  300
+);
 
 export default function EditTaskPage() {
   const id = useParams()?.id as string;
@@ -39,23 +55,6 @@ export default function EditTaskPage() {
     status: 'PENDING' as const,
     assignedToId: '' as string,
   });
-
-  const searchUsers = useCallback(
-    debounce((query: string) => {
-      if (query.trim().length < 2) {
-        setFilteredUsers([]);
-        return;
-      }
-      const token = localStorage.getItem('token');
-      fetch(`/api/users?search=${query}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => res.json())
-        .then((data) => setFilteredUsers(Array.isArray(data) ? data : []))
-        .catch(() => setFilteredUsers([]));
-    }, 300),
-    []
-  );
 
   useEffect(() => {
     if (!id) return;
@@ -80,9 +79,9 @@ export default function EditTaskPage() {
       })
       .catch(() => setLoading(false));
   }, [id]);
-
+  
   useEffect(() => {
-    searchUsers(userQuery);
+    debouncedSearchUsers(userQuery, setFilteredUsers);
   }, [userQuery]);
 
   const handleChange = (

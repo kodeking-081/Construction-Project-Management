@@ -39,16 +39,6 @@ export default function ProjectsPage() {
     }
   };
 
-  const fetchRole = async () => {
-    try {
-      const res = await fetch('/api/me');
-      const data = await res.json();
-      setRole(data.role);
-    } catch (err) {
-      console.error('Failed to fetch user role:', err);
-    }
-  };
-
   useEffect(() => {
     let isMounted = true;
 

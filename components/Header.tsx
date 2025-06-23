@@ -6,7 +6,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-export default function Header({ role }: { role: string }) {
+export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
 

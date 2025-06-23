@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Pencil, Trash2, X, Eye, EyeOff } from 'lucide-react';
-import {FileText} from 'lucide-react';
 
 
 
@@ -21,7 +20,6 @@ interface DashboardStats {
   totalProjects: number;
   totalUsers: number;
   totalTasks: number;
-  CostReports: any; // TODO: Replace 'any' with the correct type if known
 }
 
 export default function AdminDashboard() {
@@ -39,7 +37,6 @@ export default function AdminDashboard() {
   const [editCategoryId, setEditCategoryId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const router = useRouter();
-  const [showSuccess, setShowSuccess] = useState(false);
   const [categoryPage, setCategoryPage] = useState(1);
   const [userPage, setUserPage] = useState(1);
   const ITEMS_PER_PAGE = 5;
@@ -60,7 +57,7 @@ export default function AdminDashboard() {
       if (!res.ok) return router.push('/login');
       return res.json();
     }).then(data => setUser(data));
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (user?.role === 'ADMIN') {
@@ -179,7 +176,6 @@ export default function AdminDashboard() {
       <div className="p-6 min-h-screen bg-white text-gray-900">
         <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
 
-        {showSuccess && <div className="mb-4 p-4 bg-green-100 text-green-800 border border-green-300">✅ Update successful!</div>}
 
         {loading ? <div className="text-center py-12 text-gray-600">Loading stats...</div> : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -193,11 +189,11 @@ export default function AdminDashboard() {
           <h2 className="text-2xl font-semibold mb-4">Quick Settings</h2>
           <div className="border-b mb-6">
             <nav className="grid grid-cols-2 gap-3 text-sm font-medium sm:flex sm:gap-6">
-              {['users', 'profile', 'categories', 'password'].map(tab => (
+              {(['users', 'profile', 'categories', 'password'] as Array<'users' | 'profile' | 'categories' | 'password'>).map(tab => (
                 <button
                   key={tab}
                   className={`py-2 px-4 border-b-2 font-bold ${activeSettingTab === tab ? 'border-yellow-500 text-yellow-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-                  onClick={() => setActiveSettingTab(tab as any)}
+                  onClick={() => setActiveSettingTab(tab)}
                 >
                   {tab === 'users' ? 'User Management' : tab === 'profile' ? 'My Profile' : tab === 'categories' ? 'Manage Category' : 'Privacy & Security'}
                 </button>

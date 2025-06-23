@@ -2,6 +2,8 @@
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);

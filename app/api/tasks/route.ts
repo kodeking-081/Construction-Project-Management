@@ -4,9 +4,11 @@ import { jwtVerify } from 'jose';
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 const SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
 
-// 🔁 In-memory cache
+
 const taskCache = new Map<string, { data: any; expiry: number }>();
 const CACHE_TTL = 60 * 1000; // 1 minute
 

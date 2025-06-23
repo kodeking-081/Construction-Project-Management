@@ -6,7 +6,7 @@ import { cookies } from 'next/headers';
 
 const SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
 
-// ✅ Updated to read token from cookies
+// ✅ Auth function (reads token from cookies)
 async function authenticateAdmin() {
   const cookieStore = await cookies();
   const token = cookieStore.get('token')?.value;
@@ -21,21 +21,26 @@ async function authenticateAdmin() {
       return { error: 'Forbidden: Admins only', status: 403 };
     }
     return { payload };
-  } catch (err) {
+  } catch {
     return { error: 'Invalid token', status: 401 };
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+// ✅ DELETE: Remove category if not used
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   const auth = await authenticateAdmin();
   if ('error' in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
   try {
-    const categoryId = params.id;
+    const usageCount = await prisma.costItem.count({
+      where: { categoryId: params.id },
+    });
 
-    const usageCount = await prisma.costItem.count({ where: { categoryId } });
     if (usageCount > 0) {
       return NextResponse.json(
         { error: 'Cannot delete category because it is used in cost entries.' },
@@ -43,7 +48,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       );
     }
 
-    await prisma.category.delete({ where: { id: categoryId } });
+    await prisma.category.delete({ where: { id: params.id } });
 
     return NextResponse.json({ message: 'Category deleted successfully' });
   } catch (error) {
@@ -52,7 +57,11 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+// ✅ PUT: Update category name
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   const auth = await authenticateAdmin();
   if ('error' in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
