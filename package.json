@@ -6,10 +6,11 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@prisma/client": "^6.9.0",
+    "@prisma/client": "^6.10.1",
     "@types/jsonwebtoken": "^9.0.9",
     "framer-motion": "^12.18.1",
     "jose": "^6.0.11",
@@ -18,7 +19,7 @@
     "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.516.0",
     "next": "15.3.3",
-    "prisma": "^6.9.0",
+    "prisma": "^6.10.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.5.2"
