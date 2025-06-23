@@ -26,7 +26,7 @@ export default function AddProjectPage() {
         if (data.role !== 'ADMIN') {
           router.push('/');
         } else {
-          setUserId(data.userId); // ✅ use userId directly from /api/me
+          setUserId(data.id); // ✅ use userId directly from /api/me
         }
       } catch (error) {
         console.error('Failed to verify user:', error);
